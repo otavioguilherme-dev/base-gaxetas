@@ -30,7 +30,7 @@ def carregar_dados():
     }
     return pd.DataFrame(data)
 
-df = pd.read_excel("dados.xlsx")
+df = pd.read_excel("dados.xlsx", engine="openpyxl")
 
 # Campo de busca (O modelo é a chave principal)
 busca = st.text_input("Digite o MODELO:", placeholder="Ex: BRM44").upper().strip()
