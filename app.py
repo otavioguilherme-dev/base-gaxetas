@@ -1,26 +1,23 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Catálogo de Borrachas", layout="wide")
+st.set_page_config(page_title="Catálogo Profissional de Borrachas", layout="wide")
 
-st.title("🗂️ Consulta de Estoque e Medidas")
+# Estilo para melhorar a visualização no celular
+st.markdown("""
+    <style>
+    .stDataFrame { border: 1px solid #e6e9ef; border-radius: 10px; }
+    </style>
+    """, unsafe_allow_html=True)
 
 @st.cache_data
 def carregar_dados():
     try:
-        # Carrega o arquivo Excel
         df = pd.read_excel("dados.xlsx", engine="openpyxl")
-        
-        # PADRONIZAÇÃO TOTAL:
-        # 1. Limpa nomes de colunas (tira espaços e põe em maiúsculo)
         df.columns = df.columns.str.strip().str.upper()
-        
-        # 2. Converte toda a tabela para TEXTO e remove espaços em branco
-        # Isso evita o erro de números ou células vazias
         df = df.astype(str).replace('nan', '') 
         for col in df.columns:
             df[col] = df[col].str.strip()
-            
         return df
     except Exception as e:
         st.error(f"Erro ao carregar o Excel: {e}")
@@ -29,34 +26,71 @@ def carregar_dados():
 df = carregar_dados()
 
 if df is not None:
-    # Interface de busca
-    busca = st.text_input("Digite o MODELO para pesquisar:", placeholder="Ex: BRM44").upper().strip()
+    # --- BARRA LATERAL (SIDEBAR) ---
+    st.sidebar.header("Filtros de Marca")
+    
+    # Opção para selecionar a marca
+    marcas_disponiveis = sorted(df['MARCA'].unique())
+    marca_selecionada = st.sidebar.selectbox(
+        "Selecione a Marca:",
+        options=["TODAS"] + marcas_disponiveis
+    )
 
-    if busca:
-        # O segredo da correção está aqui: na_msg=False e garantir que a coluna existe
-        if 'MODELO' in df.columns:
-            # Filtra ignorando erros de valores nulos
-            mask = df['MODELO'].str.contains(busca, case=False, na=False)
-            resultado = df[mask]
-            
-            if not resultado.empty:
-                st.success(f"Encontrado(s) {len(resultado)} item(ns):")
-                
-                # Exibe os resultados formatados
-                for _, row in resultado.iterrows():
-                    with st.expander(f"📍 {row['MARCA']} - {row['MODELO']}", expanded=True):
-                        c1, c2, c3 = st.columns(3)
-                        with c1:
-                            st.write(f"**Perfil:** {row['PERFIL']}")
-                        with c2:
-                            st.write(f"**Geladeira:** {row.get('MEDIDA GELADEIRA', 'N/A')}")
-                            st.caption(f"SKU: {row.get('SKU GELADEIRA', '-')}")
-                        with c3:
-                            st.write(f"**Freezer:** {row.get('MEDIDA FREEZER', 'N/A')}")
-                            st.caption(f"SKU: {row.get('SKU FREEZER', '-')}")
-            else:
-                st.warning("Nenhum modelo encontrado com esse nome.")
-        else:
-            st.error("Coluna 'MODELO' não encontrada. Verifique o cabeçalho do seu Excel.")
+    if st.sidebar.button("Limpar Filtros"):
+        st.rerun()
+
+    st.sidebar.markdown("---")
+    st.sidebar.info("Utilize a busca principal para pesquisar por MODELO ou MEDIDA simultaneamente.")
+
+    # --- ÁREA PRINCIPAL ---
+    st.title("🔍 Consulta de Borrachas")
+    
+    termo_busca = st.text_input(
+        "Busca rápida (Modelo ou Medida):", 
+        placeholder="Ex: BRM44 ou 68x115"
+    ).upper().strip()
+
+    # Aplicação dos Filtros
+    df_filtrado = df.copy()
+
+    # Filtro de Marca (se não for "TODAS")
+    if marca_selecionada != "TODAS":
+        df_filtrado = df_filtrado[df_filtrado['MARCA'] == marca_selecionada]
+
+    # Filtro de Termo (Modelo ou Medida)
+    if termo_busca:
+        mask = (
+            df_filtrado['MODELO'].str.contains(termo_busca, na=False) |
+            df_filtrado['MEDIDA GELADEIRA'].str.contains(termo_busca, na=False) |
+            df_filtrado['MEDIDA FREEZER'].str.contains(termo_busca, na=False)
+        )
+        df_filtrado = df_filtrado[mask]
+
+    # Exibição dos Resultados
+    if not df_filtrado.empty:
+        st.success(f"Encontrado(s) {len(df_filtrado)} item(ns)")
+        
+        # Mostra a tabela com os resultados
+        st.dataframe(
+            df_filtrado, 
+            use_container_width=True, 
+            hide_index=True,
+            column_order=("MARCA", "MODELO", "PERFIL", "MEDIDA GELADEIRA", "MEDIDA FREEZER", "SKU GELADEIRA", "SKU FREEZER")
+        )
+        
+        # Se o filtro resultar em poucos itens, mostra os cards de detalhes
+        if 0 < len(df_filtrado) <= 3:
+            for _, row in df_filtrado.iterrows():
+                with st.chat_message("assistant"):
+                    st.write(f"**RESUMO PARA WHATSAPP - {row['MODELO']}**")
+                    texto = (f"Marca: {row['MARCA']}\n"
+                             f"Modelo: {row['MODELO']}\n"
+                             f"Perfil: {row['PERFIL']}\n"
+                             f"Medida Geladeira: {row['MEDIDA GELADEIRA']} (SKU: {row['SKU GELADEIRA']})\n"
+                             f"Medida Freezer: {row['MEDIDA FREEZER']} (SKU: {row['SKU FREEZER']})")
+                    st.code(texto, language="text")
     else:
-        st.info("💡 Dica: Digite parte do modelo para ver todos os resultados relacionados.")
+        st.warning("Nenhum resultado encontrado para os filtros selecionados.")
+
+else:
+    st.error("Erro crítico: Verifique se o arquivo 'dados.xlsx' está no GitHub.")
