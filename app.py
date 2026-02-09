@@ -32,20 +32,20 @@ col_logo, col_titulo = st.columns([1, 4])
 
 with col_logo:
     # Verifica se o arquivo de logo existe no GitHub
-    if os.path.exists("logo.png"):
-        image = Image.open("logo.png")
+    if os.path.exists("logo.jpg"):
+        image = Image.open("logo.jpg")
         st.image(image, width=150)
     else:
         st.write("🚀") # Ícone padrão caso não ache a logo
 
 with col_titulo:
     st.title("OGNET BORRACHAS")
-    st.subheader("Catálogo Digital de Borrachas e Gaxetas")
+    st.subheader("Sistema de Consulta  de Modelos - OGNET BORRACHAS")
 
 st.markdown("---")
 
 
-st.set_page_config(page_title="Catálogo Profissional de Borrachas", layout="wide")
+st.set_page_config(page_title="Sistema de Consulta  de Modelos - OGNET BORRACHAS", layout="wide")
 
 # Estilo para melhorar a visualização no celular
 st.markdown("""
