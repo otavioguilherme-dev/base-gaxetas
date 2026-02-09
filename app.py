@@ -1,5 +1,49 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
+import os
+
+# CONFIGURAÇÃO DA PÁGINA (Título que aparece na aba do navegador)
+st.set_page_config(
+    page_title="Sistema de Consulta  de Modelos - OGNET BORRACHAS", 
+    page_icon="❄️", 
+    layout="wide"
+)
+
+# --- PERSONALIZAÇÃO DE CORES (Opcional) ---
+# Você pode mudar o 'primaryColor' nas configurações do Streamlit Cloud,
+# mas aqui vamos focar no visual da página.
+
+@st.cache_data
+def carregar_dados():
+    try:
+        df = pd.read_excel("dados.xlsx", engine="openpyxl")
+        df.columns = df.columns.str.strip().str.upper()
+        df = df.astype(str).replace('nan', '') 
+        for col in df.columns:
+            df[col] = df[col].str.strip()
+        return df
+    except Exception as e:
+        st.error(f"Erro ao carregar o Excel: {e}")
+        return None
+
+# --- CABEÇALHO PERSONALIZADO ---
+col_logo, col_titulo = st.columns([1, 4])
+
+with col_logo:
+    # Verifica se o arquivo de logo existe no GitHub
+    if os.path.exists("logo.png"):
+        image = Image.open("logo.png")
+        st.image(image, width=150)
+    else:
+        st.write("🚀") # Ícone padrão caso não ache a logo
+
+with col_titulo:
+    st.title("OGNET BORRACHAS")
+    st.subheader("Catálogo Digital de Borrachas e Gaxetas")
+
+st.markdown("---")
+
 
 st.set_page_config(page_title="Catálogo Profissional de Borrachas", layout="wide")
 
