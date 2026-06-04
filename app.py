@@ -74,7 +74,8 @@ if df is not None:
     st.sidebar.header("Filtros de Marca")
     
     # Opção para selecionar a marca
-    marcas_disponiveis = sorted(df['MARCA'].unique())
+ marcas_limpas = df['MARCA'].dropna().astype(str).unique()
+marcas_disponiveis = sorted([marca for marca in marcas_limpas if marca.strip() != ""])
     marca_selecionada = st.sidebar.selectbox(
         "Selecione a Marca:",
         options=["TODAS"] + marcas_disponiveis
