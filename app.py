@@ -130,8 +130,11 @@ if df is not None:
                     texto = (f"Marca: {row['MARCA']}\n"
                              f"Modelo: {row['MODELO']}\n"
                              f"Perfil: {row['PERFIL']}\n"
+                             f"Perfil: {row['COR']}\n"                            
                              f"Medida Geladeira: {row['MEDIDA GELADEIRA']} (SKU: {row['SKU GELADEIRA']})\n"
-                             f"Medida Freezer: {row['MEDIDA FREEZER']} (SKU: {row['SKU FREEZER']})")
+                             f"Medida Freezer: {row['MEDIDA FREEZER']} (SKU: {row['SKU FREEZER']})"
+                             f"Perfil: {row['SKU GELADEIRA']}\n"
+                             f"Perfil: {row['SKU FREEZER']}\n")
                     st.code(texto, language="text")
     else:
         st.warning("Nenhum resultado encontrado para os filtros selecionados.")
